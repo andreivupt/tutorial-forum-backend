@@ -620,3 +620,36 @@ app.use('/api', reactionsRouter);
 * Cadastro de usuário
 
 <img src="./assets/post_user.png">
+
+* Login
+
+<img src="./assets/post_login.png">
+
+* Cadastro de post
+
+<img src="./assets/post_posts.png">
+
+* Listar posts
+
+<img src="./assets/get_posts.png">
+
+* Cadastro de comentário
+
+<img src="./assets/post_comment.png">
+
+* Listar comentários
+
+<img src="./assets/get_comments.png">
+
+* Cadastrar reação
+
+<img src="./assets/post_reaction.png">
+
+
+
+
+
+
+
+
+
