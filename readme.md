@@ -204,7 +204,8 @@ module.exports = {
 ```
 
 ### Criar rota para cadastrar usuário
-* Criar arquivo 'usersRouter.js' na pasta routes
+* Criar pasta 'routes' dentro da pasta 'src'
+* Criar arquivo 'usersRouter.js' na pasta 'routes'
 * Colar o código
 ```
 const { Router } = require('express');
@@ -224,6 +225,9 @@ module.exports = router;
 const userRouter = require('./routes/usersRouter');
 ```
 * Habilitar a utilização, adicionando o código na linha 10
+```
+app.use('/api', userRouter);
+```
 
 ### Testar servidor e conexão com banco de dados
 * Executar o comando com o gitBash
