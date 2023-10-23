@@ -304,3 +304,313 @@ router.post('/auth/login', login);
 
 module.exports = router;
 ```
+
+### Configurar API para disponibilizar a rota criada
+* Abrir o arquivo 'app.js' 
+* Adicionar a importação do 'loginRouter.js' abaixo da variável 'userRouter';
+```
+const loginRouter = require('./routes/loginRouter');
+```
+* Adicionar a utilização, adicionando o código abaixo da linha "app.use('/api, 'userRouter');"
+```
+app.use('/api', loginRouter);
+```
+
+### Criar controller para listar e registrar posts
+* Criara arquivo 'postsController.js' na pasta 'controllers'
+* Colar o código
+```
+const connection = require('../config/db');
+
+async function listPosts(request, response) {
+    const query = 'SELECT p.*, (SELECT count(r.post_id) FROM reactions r WHERE r.post_id = p.id ) as likes, ' + 
+    ' (SELECT count(c.post_id) FROM comments c WHERE c.post_id = p.id ) as comments ' +
+    ' FROM posts p ' + 
+    ' GROUP BY p.id ORDER BY p.id DESC';
+
+    connection.query(query, (err, results) => {        
+        if (results) {
+            response
+                .status(200)
+                .json({
+                    success: true,
+                    message: `Sucesso! Lista de posts.`,
+                    data: results
+                });
+        } else {
+            response
+                .status(400)
+                .json({
+                    success: false,
+                    message: `Não foi possível realizar a remoção. Verifique os dados informados`,
+                    query: err.sql,
+                    sqlMessage: err.sqlMessage
+                });
+        }
+    })
+}
+
+async function storePost(request, response) {    
+    const params = Array(
+        request.body.post,
+        request.body.userId,        
+    );
+    
+    const query = 'INSERT INTO posts(description,user_id) values(?,?);';
+
+    connection.query(query, params, (err, results) => {        
+        if (results) {
+            response
+                .status(201)
+                .json({
+                    success: true,
+                    message: `Sucesso! Post cadastrado.`,
+                    data: results
+                });
+        } else {
+            response
+                .status(400)
+                .json({
+                    success: false,
+                    message: `Não foi possível realizar a ação. Verifique os dados informados`,
+                    query: err.sql,
+                    sqlMessage: err.sqlMessage
+                });
+        }        
+    })
+}
+
+
+module.exports = {
+    listPosts,
+    storePost
+}
+```
+
+### Criar rota para listar e registrar posts
+* Criar arquivo 'postsRouter.js' na pasta 'routes'
+* Colar o código
+```
+const { Router } = require('express');
+const router = Router();
+const { listPosts, storePost } = require('../controllers/postsController')
+
+router.get('/posts', listPosts);
+router.post('/post/create', storePost);
+
+module.exports = router;
+```
+
+### Configurar API para disponibilizar a rota criada
+* Abrir o arquivo 'app.js' 
+* Adicionar a importação do 'postRouter.js' abaixo da variável 'loginRouter';
+```
+const postRouter = require('./routes/postsRouter');
+```
+* Adicionar a utilização, adicionando o código abaixo da linha "app.use('/api, 'loginRouter');"
+```
+app.use('/api', postRouter);
+```
+
+### Criar controller para listar e registrar comentarios
+* Criara arquivo 'commentsController.js' na pasta 'controllers'
+* Colar o código
+```
+const connection = require('../config/db');
+
+async function commentsByPostId(request, response) {
+
+    const query = 
+    " SELECT u.name, c.id, c.description, DATE_FORMAT(c.created_at, '%d/%m/%Y %H:%i:%s') as data_criacao, c.user_id " +
+    " FROM comments c, users u" +
+    " WHERE c.post_id = ? and c.user_id = u.id ";
+
+    const params = Array(
+        request.params.post_id
+    );
+    
+    connection.query(query, params, (err, results) => {
+        if (results) {
+            response
+                .status(200)
+                .json({
+                    success: true,
+                    message: `Sucesso! Lista de comentarios.`,
+                    data: results
+                });
+        } else {
+            response
+                .status(400)
+                .json({
+                    success: false,
+                    message: `Não foi possível realizar a ação. Verifique os dados informados`,
+                    query: err.sql,
+                    sqlMessage: err.sqlMessage
+                });
+        }
+    })
+}
+
+async function storeComment(request, response) {    
+    const params = Array(
+        request.body.description,
+        request.body.idUser,        
+        request.body.idPost
+    );
+
+    const query = 'INSERT INTO comments(description,user_id,post_id) values(?,?,?);';
+
+    connection.query(query, params, (err, results) => {
+        if (results) {
+            response
+                .status(201)
+                .json({
+                    success: true,
+                    message: `Sucesso! Comentário cadastrado.`,
+                    data: results
+                });
+        } else {
+            response
+                .status(400)
+                .json({
+                    success: false,
+                    message: `Não foi possível realizar a ação. Verifique os dados informados`,
+                    query: err.sql,
+                    sqlMessage: err.sqlMessage
+                });
+        }        
+    })
+}
+
+module.exports = {
+    commentsByPostId,
+    storeComment
+}
+```
+
+### Criar rota para listar e registrar comentários
+* Criar arquivo 'commentsRouter.js' na pasta 'routes'
+* Colar o código
+```
+const { Router } = require('express');
+const router = Router();
+const { commentsByPostId, storeComment  } = require('../controllers/commentsController');
+
+router.get('/comments/:post_id', commentsByPostId);
+router.post('/comment/create', storeComment);
+
+module.exports = router;
+```
+
+### Configurar API para disponibilizar a rota criada
+* Abrir o arquivo 'app.js' 
+* Adicionar a importação do 'commentRouter.js' abaixo da variável 'postRouter';
+```
+const commentRouter   = require('./routes/commentsRouter');
+```
+* Adicionar a utilização, adicionando o código abaixo da linha "app.use('/api, 'postRouter');"
+```
+app.use('/api', commentRouter);
+```
+
+### Criar controller para listar e registrar reações
+* Criara arquivo 'reactionsController.js' na pasta 'controllers'
+* Colar o código
+```
+const connection = require('../config/db');
+
+async function reactionsByPostId(request, response) {
+
+    const query = "SELECT sum(case when type = 'LIKE' and post_id = ? then 1 else 0 end) AS likes, " +
+    "sum(case when type = 'DESLIKE' and post_id = ? then 1 else 0 end) AS deslikes FROM reactions;";
+
+    const params = Array(
+        request.params.post_id,
+        request.params.post_id
+    );
+    console.log(params)
+    connection.query(query, params, (err, results) => {        
+        if (results) {
+            response
+                .status(200)
+                .json({
+                    success: true,
+                    message: `Sucesso! Reações por post.`,
+                    data: results
+                });
+        } else {
+            response
+                .status(400)
+                .json({
+                    success: false,
+                    message: `Não foi possível realizar a ação. Verifique os dados informados`,
+                    query: err.sql,
+                    sqlMessage: err.sqlMessage
+                });
+        }
+    })
+}
+
+async function storeReaction(request, response) {
+        
+    const params = Array(        
+        request.body.postId,        
+        request.body.comment_id ? request.body.comment_id : null,
+        request.body.userId,        
+    );
+
+    const query = 'INSERT INTO reactions(post_id,comment_id,user_id) values(?,?,?);';
+
+    connection.query(query, params, (err, results) => {
+        if (results) {
+            response
+                .status(201)
+                .json({
+                    success: true,
+                    message: `Sucesso! Reação cadastrada.`,
+                    data: results
+                });
+        } else {
+            response
+                .status(400)
+                .json({
+                    success: false,
+                    message: `Não foi possível realizar a ação. Verifique os dados informados`,
+                    query: err.sql,
+                    sqlMessage: err.sqlMessage
+                });
+        }        
+    })
+}
+
+module.exports = {
+    storeReaction,
+    reactionsByPostId
+}
+```
+
+### Criar rota para gerenciar reações
+* Criar arquivo 'reactionsRouter.js' na pasta 'routes'
+* Colar o código
+```
+const { Router } = require('express');
+const router = Router();
+const { storeReaction, reactionsByPostId } = require('../controllers/reactionsController');
+const { route } = require('./usersRouter');
+
+router.post('/reaction/create', storeReaction);
+router.get('/reactions_post/:post_id', reactionsByPostId);
+
+module.exports = router;
+```
+
+### Configurar API para disponibilizar a rota criada
+* Abrir o arquivo 'app.js' 
+* Adicionar a importação do 'reactionRouter.js' abaixo da variável 'commentRouter';
+```
+const reactionRouter = require('./routes/reactionsRouter');
+```
+* Adicionar a utilização, adicionando o código abaixo da linha "app.use('/api, 'commentRouter');"
+```
+app.use('/api', reactionsRouter);
+```
