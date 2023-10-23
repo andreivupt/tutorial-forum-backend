@@ -614,3 +614,9 @@ const reactionRouter = require('./routes/reactionsRouter');
 ```
 app.use('/api', reactionsRouter);
 ```
+
+## Teste de enpoints com Insomnia
+
+* Cadastro de usuário
+
+<img src="./assets/post_user.png">
